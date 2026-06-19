@@ -1,8 +1,18 @@
 import { Redis } from "@upstash/redis";
 
-const redis = Redis.fromEnv();
+const redis = new Redis({
+    url: process.env.UPSTASH_REDIS_KV_REST_API_URL,
+    token: process.env.UPSTASH_REDIS_KV_REST_API_TOKEN
+});
 
 export default async function handler(req, res) {
-    const daten = await redis.get("erlebnisDaten");
-    res.status(200).json(daten || {});
+    try {
+        const daten = await redis.get("erlebnisDaten");
+        res.status(200).json(daten || {});
+    } catch (error) {
+        res.status(500).json({
+            error: "Laden fehlgeschlagen",
+            details: error.message
+        });
+    }
 }
