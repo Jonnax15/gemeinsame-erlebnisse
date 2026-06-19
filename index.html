@@ -253,10 +253,22 @@ const erlebnisse = [
 
 const liste = document.getElementById("liste");
 
-let daten = JSON.parse(localStorage.getItem("erlebnisDaten")) || {};
+let daten = {};
 
-function speichern(){
-    localStorage.setItem("erlebnisDaten", JSON.stringify(daten));
+async function speichern(){
+    await fetch("/api/save", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(daten)
+    });
+}
+
+async function laden(){
+    const response = await fetch("/api/load");
+    daten = await response.json();
+    render();
 }
 
 function fortschrittAktualisieren(){
@@ -369,20 +381,22 @@ function render(){
         upload.accept = "image/*";
         upload.multiple = true;
 
-        upload.addEventListener("change",()=>{
+        upload.addEventListener("change", async ()=>{
+            for (const file of upload.files) {
+                const response = await fetch("/api/upload", {
+                    method: "POST",
+                    headers: {
+                        "x-filename": file.name
+                    },
+                    body: file
+                });
 
-            [...upload.files].forEach(file=>{
+                const data = await response.json();
 
-                const reader = new FileReader();
-
-                reader.onload = function(e){
-                    daten[index].bilder.push(e.target.result);
-                    speichern();
-                    render();
-                };
-
-                reader.readAsDataURL(file);
-            });
+                daten[index].bilder.push(data.url);
+                await speichern();
+                render();
+            }
         });
 
         uploadBox.appendChild(uploadLabel);
@@ -443,7 +457,7 @@ document.getElementById("lightbox").onclick = ()=>{
     document.getElementById("lightbox").style.display = "none";
 };
 
-render();
+laden();
 </script>
 
 </body>
