@@ -12,8 +12,11 @@ export default async function handler(req, res) {
 
     try {
         await redis.set("erlebnisDaten", req.body);
-        res.status(200).json({ success: true });
+        return res.status(200).json({ success: true });
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        return res.status(500).json({
+            error: "Speichern fehlgeschlagen",
+            details: error.message
+        });
     }
 }
