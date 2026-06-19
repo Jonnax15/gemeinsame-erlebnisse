@@ -266,11 +266,22 @@ async function speichern(){
 }
 
 async function laden(){
-    const response = await fetch("/api/load");
-    daten = await response.json();
+    try{
+        const response = await fetch("/api/load");
+
+        if(!response.ok){
+            throw new Error("Laden fehlgeschlagen");
+        }
+
+        const serverDaten = await response.json();
+        daten = serverDaten && typeof serverDaten === "object" ? serverDaten : {};
+    }catch(error){
+        console.log("Fehler beim Laden:", error);
+        daten = {};
+    }
+
     render();
 }
-
 function fortschrittAktualisieren(){
     const erledigt = erlebnisse.filter((_,index)=>daten[index]?.erledigt).length;
     const gesamt = erlebnisse.length;
